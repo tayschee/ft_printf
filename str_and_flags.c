@@ -6,7 +6,7 @@
 /*   By: tbigot <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/11/05 12:12:41 by tbigot            #+#    #+#             */
-/*   Updated: 2019/11/15 16:05:49 by tbigot           ###   ########.fr       */
+/*   Updated: 2019/11/19 16:25:16 by tbigot           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,11 @@ static char		*sign_neg(t_flist *flags, char *print, int i)
 	char *complete;
 	char *tmp;
 
-	if (print && *print == '-')
+	if (*print == '-')
 		flags->precision++;
 	if (!(complete = ft_calloc(flags->precision + 1, sizeof(char))))
 		return (NULL);
 	tmp = complete;
-	if (*print == '-')
-	{
-		*complete++ = '-';
-		print++;
-	}
 	ft_memset(complete, '0', flags->precision - i);
 	ft_strlcat(complete, print, flags->precision + 1);
 	return (tmp);
@@ -60,8 +55,11 @@ static char		*precision_first(t_flist *flags, char *print)
 	if (flags->c == 's' && flags->precision < i && flags->precision != -1)
 		complete = ft_substr(print, 0, flags->precision);
 	else if (flags->c != 's' && flags->c != '%'
-	&& flags->precision > i && flags->precision != -1)
+	&& flags->precision != -1 && (flags->precision >= i))
 		complete = sign_neg(flags, print, i);
+	else if (flags->c != 's' && flags->c != 'p' && flags->c != '%'
+			&& flags->c != 'c' && *print == '0' && flags->precision == 0)
+		complete = ft_strdup("");
 	else
 		return (print);
 	free(print);
@@ -70,13 +68,12 @@ static char		*precision_first(t_flist *flags, char *print)
 
 static char		*modify_size(t_flist *flags, char *print)
 {
-	int		exception;
 	int		size_print;
 	int		size;
 	char	*to_print;
 
 	if (!print)
-		print = ft_strjoin(print, "(null)");
+		print = ft_strdup("(null)");
 	print = precision_first(flags, print);
 	size_print = ft_strlen(print);
 	if (size_print == 0 && flags->c == 'c')
@@ -100,6 +97,7 @@ void			str_and_flags(t_flist *flags, char *print)
 	char *to_print;
 
 	to_print = modify_size(flags, print);
+	neg_excep(to_print, flags);
 	ft_putstr_fd(to_print, 1);
 	excep(to_print, flags);
 	free(to_print);
